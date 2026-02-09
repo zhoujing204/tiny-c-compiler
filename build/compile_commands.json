@@ -1,0 +1,56 @@
+[
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/tcc.c.obj -c D:/ai-agents/tiny-c-compiler/src/tcc.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/tcc.c",
+  "output": "CMakeFiles/tcc.dir/src/tcc.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/lex.c.obj -c D:/ai-agents/tiny-c-compiler/src/lex.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/lex.c",
+  "output": "CMakeFiles/tcc.dir/src/lex.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/parse.c.obj -c D:/ai-agents/tiny-c-compiler/src/parse.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/parse.c",
+  "output": "CMakeFiles/tcc.dir/src/parse.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/sym.c.obj -c D:/ai-agents/tiny-c-compiler/src/sym.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/sym.c",
+  "output": "CMakeFiles/tcc.dir/src/sym.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/gen.c.obj -c D:/ai-agents/tiny-c-compiler/src/gen.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/gen.c",
+  "output": "CMakeFiles/tcc.dir/src/gen.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/x86_64-gen.c.obj -c D:/ai-agents/tiny-c-compiler/src/x86_64-gen.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/x86_64-gen.c",
+  "output": "CMakeFiles/tcc.dir/src/x86_64-gen.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/pe.c.obj -c D:/ai-agents/tiny-c-compiler/src/pe.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/pe.c",
+  "output": "CMakeFiles/tcc.dir/src/pe.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/section.c.obj -c D:/ai-agents/tiny-c-compiler/src/section.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/section.c",
+  "output": "CMakeFiles/tcc.dir/src/section.c.obj"
+},
+{
+  "directory": "D:/ai-agents/tiny-c-compiler/build",
+  "command": "C:/TDM-GCC-64/bin/gcc.exe  @CMakeFiles/tcc.dir/includes_C.rsp -g -std=gnu11 -Wall -Wextra -pedantic -o CMakeFiles/tcc.dir/src/utils.c.obj -c D:/ai-agents/tiny-c-compiler/src/utils.c",
+  "file": "D:/ai-agents/tiny-c-compiler/src/utils.c",
+  "output": "CMakeFiles/tcc.dir/src/utils.c.obj"
+}
+]

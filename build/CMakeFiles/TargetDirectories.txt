@@ -1,0 +1,3 @@
+D:/ai-agents/tiny-c-compiler/build/CMakeFiles/tcc.dir
+D:/ai-agents/tiny-c-compiler/build/CMakeFiles/edit_cache.dir
+D:/ai-agents/tiny-c-compiler/build/CMakeFiles/rebuild_cache.dir
