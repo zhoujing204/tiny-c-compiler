@@ -8,6 +8,7 @@ A minimalist C compiler for Windows x64. This project aims to be a small, self-c
 - **Control Flow**: `if`, `else`, `while`, `for`, `return`.
 - **Arithmetic**: Basic integer arithmetic (+, -, \*, /, %, &, |, ^, <<, >>) and comparisons.
 - **Output**: Generates native Windows x64 Executable (PE) files directly.
+- **Function Calls**: Windows x64 ABI support (Register passing RCX/RDX/R8/R9, Stack passing, Shadow space).
 - **Design**: One-pass compilation, simple recursive descent parser, register-based code generation.
 
 ## Building
@@ -62,4 +63,4 @@ echo %ERRORLEVEL%
 ## Status
 
 **Active Development**. Currently supports basic C constructs.
-Future work includes: function calls with arguments, structs, preprocessor directives.
+Future work includes: structs, preprocessor directives.

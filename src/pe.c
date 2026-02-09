@@ -233,7 +233,20 @@ int pe_output_file(TCCState *s, const char *filename) {
   write_u32(header + 0xa0, size_of_init_data);
   write_u32(header + 0xa4,
             s->bss_section ? (uint32_t)s->bss_section->data_size : 0);
-  write_u32(header + 0xa8, SECTION_ALIGNMENT); /* Entry point RVA */
+  /* Entry point RVA */
+  uint32_t entry_point = SECTION_ALIGNMENT;
+  Sym *main_sym = sym_find2(s, "main");
+  if (main_sym) {
+    entry_point += (uint32_t)main_sym->c;
+    if (s->verbose)
+      printf("Entry point set to 'main' at RVA %08x\n", entry_point);
+  } else {
+    if (s->verbose)
+      printf("Entry point set to start of .text at RVA %08x (main not found)\n",
+             entry_point);
+  }
+  write_u32(header + 0xa8, entry_point);
+
   write_u32(header + 0xac, SECTION_ALIGNMENT); /* Base of code */
   write_u64(header + 0xb0, IMAGE_BASE);
   write_u32(header + 0xb8, SECTION_ALIGNMENT);
