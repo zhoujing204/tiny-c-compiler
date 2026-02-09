@@ -717,7 +717,8 @@ void decl(TCCState *s, int flags) {
       /* Parse parameters */
       s->local_scope++;
       int param_count = 0;
-      int param_offset = 16; /* After return address and saved RBP */
+      int stack_param_offset =
+          48; /* After return address, saved RBP, and shadow space (16+32) */
 
       while (s->tok != ')') {
         int param_t = parse_type(s);
@@ -730,15 +731,18 @@ void decl(TCCState *s, int flags) {
         }
 
         if (param_name) {
-          /* First 4 params in registers on Windows x64 */
-          int reg_or_stack;
+          /* Windows x64: First 4 params in registers, pushed to stack in prolog
+           */
+          int offset;
           if (param_count < 4) {
-            reg_or_stack = VT_LOCAL; /* Will be moved to stack in prolog */
+            /* [rbp-8], [rbp-16], [rbp-24], [rbp-32] */
+            offset = -(param_count + 1) * 8;
           } else {
-            reg_or_stack = VT_LOCAL;
+            /* [rbp+48], [rbp+56], ... */
+            offset = stack_param_offset;
+            stack_param_offset += 8;
           }
-          sym_push2(s, param_name, param_t, reg_or_stack, param_offset);
-          param_offset += 8;
+          sym_push2(s, param_name, param_t, VT_LOCAL, offset);
         }
 
         param_count++;

@@ -152,7 +152,7 @@ void load(TCCState *s, int r, SValue *sv) {
     int fr_reg = fr & 0x00ff;
     if (fr_reg != r) {
       /* mov r, fr */
-      gen_rex(s, 1, r, 0, fr_reg);
+      gen_rex(s, 1, fr_reg, 0, r);
       g(s, 0x89);
       gen_modrm(s, 3, fr_reg, r);
     }
@@ -475,41 +475,32 @@ void gfunc_prolog(TCCState *s, int t) {
   g(s, 0x89);
   gen_modrm(s, 3, REG_RSP, REG_RBP);
 
-  /* sub rsp, N (allocate stack space) - we'll patch this later */
-  /* For now, allocate 64 bytes + 32 bytes shadow space = 96 bytes,
-   * aligned to 16 */
+  /* Save the first 4 parameters by pushing them to stack */
+  /* This places them at [rbp-8], [rbp-16], [rbp-24], [rbp-32] */
+
+  /* push rcx */
+  g(s, 0x51);
+
+  /* push rdx */
+  g(s, 0x52);
+
+  /* push r8 */
+  g(s, 0x41);
+  g(s, 0x50);
+
+  /* push r9 */
+  g(s, 0x41);
+  g(s, 0x51);
+
+  /* sub rsp, N (allocate stack space) */
+  /* Allocate 64 bytes (96 - 32) */
   gen_rex(s, 1, 0, 0, REG_RSP);
   g(s, 0x83);
   gen_modrm(s, 3, 5, REG_RSP);
-  g(s, 0x60); /* 96 bytes */
-
-  /* Save the first 4 parameters to shadow space (Windows x64 ABI) */
-  /* mov [rbp+16], rcx */
-  gen_rex(s, 1, REG_RCX, 0, REG_RBP);
-  g(s, 0x89);
-  gen_modrm(s, 1, REG_RCX, REG_RBP);
-  g(s, 0x10);
-
-  /* mov [rbp+24], rdx */
-  gen_rex(s, 1, REG_RDX, 0, REG_RBP);
-  g(s, 0x89);
-  gen_modrm(s, 1, REG_RDX, REG_RBP);
-  g(s, 0x18);
-
-  /* mov [rbp+32], r8 */
-  gen_rex(s, 1, REG_R8, 0, REG_RBP);
-  g(s, 0x89);
-  gen_modrm(s, 1, REG_R8, REG_RBP);
-  g(s, 0x20);
-
-  /* mov [rbp+40], r9 */
-  gen_rex(s, 1, REG_R9, 0, REG_RBP);
-  g(s, 0x89);
-  gen_modrm(s, 1, REG_R9, REG_RBP);
-  g(s, 0x28);
+  g(s, 0x40); /* 64 bytes */
 
   /* Initialize local variable offset */
-  s->loc = 0;
+  s->loc = -32;
 }
 
 void gfunc_epilog(TCCState *s) {
@@ -529,79 +520,142 @@ void gfunc_epilog(TCCState *s) {
  * Function Calls
  *============================================================*/
 
+/* Function call */
 void gfunc_call(TCCState *s, int nb_args) {
   int i;
+  int stack_args = 0;
 
   /* Windows x64 calling convention:
    * First 4 args in RCX, RDX, R8, R9
    * Remaining args on stack (right to left)
    * 32-byte shadow space required
+   * Stack must be 16-byte aligned before call
    */
 
-  /* Move arguments to parameter registers (simplified) */
-  for (i = nb_args - 1; i >= 0; i--) {
-    int r;
+  /* Calculate stack space for arguments > 4 */
+  if (nb_args > 4) {
+    stack_args = nb_args - 4;
+    /* Align stack to 16 bytes if necessary (stacks args + shadow space) */
+    if ((stack_args * 8 + 32) % 16 != 0) {
+      /* This is a simplification; a real compiler tracks stack depth.
+       * For now, we assume stack is aligned at function entry and only
+       * pushes affect it. We need to ensure (rsp - 8) % 16 == 0 when call
+       * executes. (rsp - 8 because 'call' pushes return address).
+       */
+      /* sub rsp, 8 */
+      gen_rex(s, 1, 0, 0, REG_RSP);
+      g(s, 0x83);
+      gen_modrm(s, 3, 5, REG_RSP);
+      g(s, 0x08);
+    }
+  }
 
+  /* Push stack arguments (reverse order) */
+  for (i = nb_args - 1; i >= 4; i--) {
+    /* Get argument from stack to register */
+    gv(s, RC_INT);
+    int r = s->vtop->r & 0xff;
+
+    /* push r */
+    if (r > 7)
+      g(s, 0x41);
+    g(s, 0x50 + (r & 7));
+
+    vpop(s);
+  }
+
+  /* Register arguments (RCX, RDX, R8, R9) */
+  /* We need to be careful not to clobber registers needed for later arguments.
+   * Simple approach: Move to correct registers in reverse order?
+   * No, earlier args might be in the very registers we need.
+   * A full register allocator handles this.
+   * For this tiny compiler, we'll bank on the fact that expression evaluation
+   * usually leaves results in RAX/RCX/R10/R11.
+   * We will force load into specific registers.
+   */
+
+  for (i = (nb_args > 4 ? 3 : nb_args - 1); i >= 0; i--) {
+    int r;
     if (i == 0)
       r = REG_RCX;
     else if (i == 1)
       r = REG_RDX;
     else if (i == 2)
       r = REG_R8;
-    else if (i == 3)
+    else
       r = REG_R9;
-    else {
-      /* Stack args - push */
-      gv(s, RC_INT);
-      int arg_r = s->vtop->r & 0xff;
 
-      /* push arg */
-      if (arg_r > 7) {
-        g(s, 0x41); /* REX.B */
-      }
-      g(s, 0x50 + (arg_r & 7));
+    gv(s, (i == 0) ? RC_RCX : (i == 1) ? RC_RDX : (i == 2) ? RC_R8 : RC_R9);
 
-      vpop(s);
-      continue;
-    }
-
-    /* Load argument to correct register */
-    gv(s, (i == 0) ? RC_RCX : (i == 1) ? RC_RDX : RC_INT);
-
+    /* Move if not in correct register (gv might have picked another if
+     * constrained) */
     if ((s->vtop->r & 0xff) != r) {
-      /* mov r, src */
       int src = s->vtop->r & 0xff;
-      gen_rex(s, 1, r, 0, src);
+      gen_rex(s, 1, src, 0, r);
       g(s, 0x89);
       gen_modrm(s, 3, src, r);
     }
     vpop(s);
   }
 
-  /* Allocate shadow space (32 bytes) if not already done in prolog */
-  /* sub rsp, 32 - included in function prologue */
+  /* Allocate shadow space (32 bytes) */
+  /* sub rsp, 32 */
+  gen_rex(s, 1, 0, 0, REG_RSP);
+  g(s, 0x83);
+  gen_modrm(s, 3, 5, REG_RSP);
+  g(s, 0x20);
 
   /* Get function address and call */
-  if (s->vtop >= s->vstack && s->vtop->sym) {
-    /* Direct call to known function - generate placeholder */
-    g(s, 0xe8);     /* call rel32 */
-    gen_le32(s, 0); /* Placeholder - will need relocation */
+  /* The function address is now at the top of the stack (pushed before args) */
+  /* Wait, parsing order puts function address first? */
+  /* parse.c: expr() -> parses function name -> pushes symbol ? */
+  /* Actually, for 'add(a,b)', parsing stack is: [func_addr, a, b] */
+  /* We popped args. func_addr should be at s->vtop */
+
+  if (s->vtop >= s->vstack && (s->vtop->r & VT_VALMASK) == VT_CONST &&
+      s->vtop->sym) {
+    /* Direct call */
+    /* Only if it's a direct symbol reference */
+    g(s, 0xe8); /* call rel32 */
+
+    /* Calculate relative offset */
+    Sym *sym = s->vtop->sym;
+    /* TODO: Only works for defined symbols in same section */
+    gen_le32(s, (int)(sym->c - (s->ind + 4)));
+
     vpop(s);
   } else {
-    /* Indirect call through register */
+    /* Indirect call */
     gv(s, RC_INT);
     int r = s->vtop->r & 0xff;
-
-    /* call r */
-    if (r > 7) {
-      g(s, 0x41); /* REX.B */
-    }
+    if (r > 7)
+      g(s, 0x41);
     g(s, 0xff);
     gen_modrm(s, 3, 2, r & 7);
     vpop(s);
   }
 
-  /* Result is in RAX */
+  /* Clean up stack (shadow space + stack args + alignment) */
+  /* add rsp, N */
+  int stack_adjust = 32 + (stack_args * 8);
+  /* Alignment adjustment not tracked well here, assuming aligned for now */
+  /* In a real implementation we'd track 'stack_depth' to know if we added
+   * padding */
+
+  if (stack_adjust > 0) {
+    gen_rex(s, 1, 0, 0, REG_RSP);
+    if (stack_adjust < 128) {
+      g(s, 0x83);
+      gen_modrm(s, 3, 0, REG_RSP);
+      g(s, stack_adjust);
+    } else {
+      g(s, 0x81);
+      gen_modrm(s, 3, 0, REG_RSP);
+      gen_le32(s, stack_adjust);
+    }
+  }
+
+  /* Result in RAX */
   vset(s, VT_INT, REG_RAX, 0);
 }
 

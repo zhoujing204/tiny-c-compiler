@@ -154,6 +154,7 @@ typedef enum {
 #define VT_JMPI 0x00f5 /* inverted VT_JMP */
 
 /* Value flags */
+#define VT_VALMASK 0x00ff  /* value mask */
 #define VT_LVAL 0x0100     /* lvalue */
 #define VT_SYM 0x0200      /* symbol reference */
 #define VT_MUSTCAST 0x0400 /* must cast */
@@ -185,6 +186,8 @@ typedef enum {
 #define RC_RAX 0x0004   /* specifically RAX */
 #define RC_RCX 0x0008   /* specifically RCX */
 #define RC_RDX 0x0010   /* specifically RDX */
+#define RC_R8 0x0020    /* specifically R8 */
+#define RC_R9 0x0040    /* specifically R9 */
 
 /* Number of available temp registers */
 #define NB_REGS 6
